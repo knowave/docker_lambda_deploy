@@ -29,5 +29,5 @@ custom:
                 - schedule: rate(5 minutes)
         prewarm: true
         payload:
-            path: /dev/health
+            path: /health
             httpMethod: GET
