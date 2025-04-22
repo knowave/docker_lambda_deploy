@@ -25,9 +25,9 @@ custom:
     warmup:
         default:
             enabled: true
-            events:
-                - schedule: rate(5 minutes)
-        prewarm: true
-        payload:
-            path: /health
-            httpMethod: GET
+            prewarm: true
+            payload:
+                path: /health
+                httpMethod: GET
+        folderName: warmup-plugin
+        cleanFolder: true
