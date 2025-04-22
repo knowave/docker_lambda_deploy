@@ -1,0 +1,33 @@
+service: dotzip-nest-backend
+
+provider:
+    name: aws
+    region: ap-northeast-2
+    runtime: nodejs20.x
+    ecr:
+        scanOnPush: true
+        images:
+            appimage:
+                uri: 145998136165.dkr.ecr.ap-northeast-2.amazonaws.com/dotzip:5c96f175ab92c83b481127dd1a25e6b3fce7c081
+                file: Dockerfile
+
+functions:
+    api:
+        image:
+            name: appimage
+        timeout: 10
+        memorySize: 512
+
+plugins:
+    - serverless-plugin-warmup
+
+custom:
+    warmup:
+        default:
+            enabled: true
+            events:
+                - schedule: rate(5 minutes)
+        prewarm: true
+        payload:
+            path: /health
+            httpMethod: GET
