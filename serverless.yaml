@@ -1,5 +1,7 @@
 service: dotzip-nest-backend
 
+frameworkVersion: v3
+
 provider:
     name: aws
     region: ap-northeast-2
@@ -13,6 +15,7 @@ provider:
 
 functions:
     api:
+        name: dotzip-backend-lambda
         image:
             name: appimage
         timeout: 10
