@@ -23,11 +23,13 @@ plugins:
 
 custom:
     warmup:
-        default:
+        officeHoursWarmer:
             enabled: true
+            events:
+                - schedule: cron(*/5 * * * ? *)
+            concurrency: 1
+            verbose: true
             prewarm: true
             payload:
-                path: /health
-                httpMethod: GET
-        folderName: warmup-plugin
-        cleanFolder: true
+                path: /dev/health
+                method: GET
