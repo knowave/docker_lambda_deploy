@@ -3,7 +3,7 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { Callback, Context, Handler } from 'aws-lambda';
 import { AppModule } from './app.module';
 import * as express from 'express';
-import serverlessExpress from '@codegenie/serverless-express';
+import { configure as serverlessExpress } from '@codegenie/serverless-express';
 
 let cachedHandler: Handler;
 
