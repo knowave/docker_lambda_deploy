@@ -8,8 +8,8 @@ provider:
         scanOnPush: true
         images:
             appimage:
-                uri: 145998136165.dkr.ecr.ap-northeast-2.amazonaws.com/dotzip:5c96f175ab92c83b481127dd1a25e6b3fce7c081
-                file: Dockerfile
+            uri: ${aws:accountId}.dkr.ecr.${aws:region}.amazonaws.com/dotzip:latest
+            file: Dockerfile
 
 functions:
     api:
