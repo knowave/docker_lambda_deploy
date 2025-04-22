@@ -1,7 +1,5 @@
 service: dotzip-nest-backend
 
-frameworkVersion: v3
-
 provider:
     name: aws
     region: ap-northeast-2
