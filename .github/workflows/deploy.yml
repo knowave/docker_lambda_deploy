@@ -82,8 +82,11 @@ jobs:
 
             - name: Deploy Lambda Function
               run: |
-                  echo "🔍 Deploying Lambda function..."
-                  aws lambda update-function-code \
-                    --function-name $AWS_LAMBDA_FUNCTION_NAME \
-                    --image-uri ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
-                    --region $AWS_REGION
+                  echo "🔍 Deploying Lambda function using Serverless Framework..."
+                  serverless deploy --stage dev --verbose
+
+            #   echo "🔍 Deploying Lambda function..."
+            #       aws lambda update-function-code \
+            #         --function-name $AWS_LAMBDA_FUNCTION_NAME \
+            #         --image-uri ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+            #         --region $AWS_REGION
