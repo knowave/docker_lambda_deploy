@@ -9,7 +9,7 @@ provider:
         images:
             appimage:
             uri: ${aws:accountId}.dkr.ecr.${aws:region}.amazonaws.com/dotzip:latest
-            file: Dockerfile
+            # file: Dockerfile
 
 functions:
     api:
