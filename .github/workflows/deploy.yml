@@ -1,0 +1,81 @@
+name: Deploy to AWS ECR + Lambda
+
+on:
+    push:
+        branches:
+            - main
+
+env:
+    AWS_REGION: ap-northeast-2
+    ECR_REPOSITORY: dotzip
+    AWS_LAMBDA_FUNCTION_NAME: dotzip-backend-lambda
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout project
+              uses: actions/checkout@v3
+
+            - name: Configure AWS CLI
+              uses: aws-actions/configure-aws-credentials@v3
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY}}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v1
+
+            - name: Cleanup old ECR Images (keep 3 images)
+              run: |
+                  echo "🔍 Fetching images from ECR..."
+                  IMAGES=$(aws ecr describe-images \
+                    --region $AWS_REGION \
+                    --repository-name $ECR_REPOSITORY \
+                    --query 'sort_by(imageDetails,&imagePushedAt)[::-1]' \
+                    --output json)
+
+                  COUNT=$(echo "$IMAGES" | jq length)
+
+                  if [ "$COUNT" -le 3 ]; then
+                    echo "✅ $COUNT image(s) only. No cleanup needed."
+                    exit 0
+                  fi
+
+                  echo "🧹 Deleting old images..."
+
+                  echo "$IMAGES" | jq '.[3:] | map({imageDigest: .imageDigest})' > delete.json
+                  jq -c '.[]' delete.json | split -l 100 - part_
+
+                  for part in part_*; do
+                    echo "👉 Deleting batch $part"
+                    jq -s '.' "$part" > batch.json
+                    aws ecr batch-delete-image \
+                      --region $AWS_REGION \
+                      --repository-name $ECR_REPOSITORY \
+                      --image-ids file://batch.json
+                    rm "$part"
+                  done
+
+                  rm delete.json batch.json
+                  echo "✅ Cleanup complete."
+
+            - name: Build, tag and push image to Amazon ECR
+              id: build-image
+              env:
+                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                  IMAGE_TAG: ${{ github.sha }}
+              run: |
+                  echo "🔍 Building Docker image..."
+                  docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                  docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+            - name: Deploy Lambda Function
+              run: |
+                  echo "🔍 Deploying Lambda function..."
+                  aws lambda update-function-code \
+                    --function-name $AWS_LAMBDA_FUNCTION_NAME \
+                    --image-uri ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }} \
+                    --region $AWS_REGION
