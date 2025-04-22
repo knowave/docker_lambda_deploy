@@ -28,25 +28,25 @@ jobs:
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@v1
 
-            - name: Cleanup old ECR Images (keep 3 images)
+            - name: Cleanup all ECR Images (if more than 0 exist)
               run: |
                   echo "🔍 Fetching images from ECR..."
                   IMAGES=$(aws ecr describe-images \
                     --region $AWS_REGION \
                     --repository-name $ECR_REPOSITORY \
-                    --query 'sort_by(imageDetails,&imagePushedAt)[::-1]' \
+                    --query 'imageDetails' \
                     --output json)
 
                   COUNT=$(echo "$IMAGES" | jq length)
 
-                  if [ "$COUNT" -le 3 ]; then
-                    echo "✅ $COUNT image(s) only. No cleanup needed."
+                  if [ "$COUNT" -eq 0 ]; then
+                    echo "✅ No images found. Nothing to delete."
                     exit 0
                   fi
 
-                  echo "🧹 Deleting old images..."
+                  echo "🧹 Deleting all $COUNT image(s)..."
 
-                  echo "$IMAGES" | jq '.[3:] | map({imageDigest: .imageDigest})' > delete.json
+                  echo "$IMAGES" | jq 'map({imageDigest: .imageDigest})' > delete.json
                   jq -c '.[]' delete.json | split -l 100 - part_
 
                   for part in part_*; do

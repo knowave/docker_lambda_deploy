@@ -9,6 +9,15 @@ let cachedHandler: Handler;
 
 async function bootstrap(): Promise<Handler> {
     const expressApp = express();
+
+    expressApp.use((req, _, next) => {
+        const stagePrefix = '/dev';
+        if (req.url.startsWith(stagePrefix)) {
+            req.url = req.url.slice(stagePrefix.length) || '/';
+        }
+        next();
+    });
+
     const adapter = new ExpressAdapter(expressApp);
     const app = await NestFactory.create(AppModule, adapter);
 
